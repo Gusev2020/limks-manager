@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import Button from 'primevue/button';
+import Button from 'primevue/button'
 </script>
 
 <template>
   <main>
     test
-    <Button label="Submit" severity="warn"/>
+    <Button label="Submit" severity="warn" />
   </main>
 </template>
+
+<style scoped></style>
