@@ -54,7 +54,10 @@ export function useAuth() {
 
   const resetPassword = async (email: string) => {
     return await handleRequest(async () => {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email)
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        // для продакшн указать корректный домен
+        redirectTo: 'http://localhost:5173/reset-password',
+      })
 
       if (error) throw new Error(error.message)
 
@@ -62,5 +65,15 @@ export function useAuth() {
     })
   }
 
-  return { singUp, singIn, resetPassword, loading, errorMessage }
+  const updatePassword = async (password: string) => {
+    return await handleRequest(async () => {
+      const { data, error } = await supabase.auth.updateUser({ password })
+
+      if (error) throw new Error(error.message)
+
+      return data
+    })
+  }
+
+  return { singUp, singIn, resetPassword, updatePassword, loading, errorMessage }
 }

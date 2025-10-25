@@ -38,8 +38,6 @@ const submitForm = async ({ valid }) => {
       password: formData.value.password,
     })
   } catch {
-    console.log(errorMessage.value, 'login form')
-
     showToast('error', 'Ошибка при входе', errorMessage.value)
   }
 }
