@@ -7,10 +7,11 @@ import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { Form } from '@primevue/forms'
 import Message from 'primevue/message'
 import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
-import { supabase } from '@/supabase.ts'
+import { useToastNotification } from '@/composables/useToastNotifications'
+import { useAuth } from '@/composables/useAuth'
 
-const toast = useToast()
+const { showToast } = useToastNotification()
+const { singUp, loading, errorMessage } = useAuth()
 
 type FormData = {
   email: string
@@ -31,26 +32,18 @@ const rules = z.object({
 })
 
 const resolver = ref(zodResolver(rules))
-const emits = defineEmits(['resetPassword'])
 
 const submitForm = async ({ valid }) => {
   if (!valid) return
-  const { data, error } = await supabase.auth.signUp({
-    email: formData.value.email,
-    password: formData.value.password,
-  })
-
-  if (error) {
-    toast.add({ severity: 'error', summary: 'Ошибка', detail: error, life: 3000 })
-  } else {
-    toast.add({
-      severity: 'success',
-      summary: 'Регистрация',
-      detail: 'Вы успешно зарегистрировались',
-      life: 3000,
+  try {
+    await singUp({
+      email: formData.value.email,
+      password: formData.value.password,
+      firstname: formData.value.firstname,
     })
+  } catch {
+    showToast('error', 'Ошибка регистрации', errorMessage.value)
   }
-  console.log(data, error)
 }
 </script>
 
@@ -93,7 +86,7 @@ const submitForm = async ({ valid }) => {
         name="firstname"
         placeholder="Введите имя"
         type="text"
-        v-model="formData.firstName"
+        v-model="formData.firstname"
         class="w-full"
       />
       <Message v-if="$form.firstname?.invalid" severity="error" size="small" variant="simple">
@@ -101,7 +94,7 @@ const submitForm = async ({ valid }) => {
       </Message>
     </div>
     <div class="grid grid-cols-2 gap-3">
-      <Button type="submit" class="w-full" label="Регистрация" />
+      <Button type="submit" class="w-full" label="Регистрация" :loading="loading" />
       <Button type="submit" icon="pi pi-github" class="w-full" label="Github" severity="contrast" />
     </div>
   </Form>

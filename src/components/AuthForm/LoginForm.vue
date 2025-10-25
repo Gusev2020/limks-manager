@@ -6,6 +6,11 @@ import { z } from 'zod'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { Form } from '@primevue/forms'
 import Message from 'primevue/message'
+import { useToastNotification } from '@/composables/useToastNotifications'
+import { useAuth } from '@/composables/useAuth'
+
+const { showToast } = useToastNotification()
+const { singIn, loading, errorMessage } = useAuth()
 
 type FormData = {
   email: string
@@ -26,7 +31,17 @@ const resolver = ref(zodResolver(rules))
 const emits = defineEmits(['resetPassword'])
 
 const submitForm = async ({ valid }) => {
-  console.log(valid)
+  if (!valid) return
+  try {
+    await singIn({
+      email: formData.value.email,
+      password: formData.value.password,
+    })
+  } catch {
+    console.log(errorMessage.value, 'login form')
+
+    showToast('error', 'Ошибка при входе', errorMessage.value)
+  }
 }
 </script>
 
@@ -65,7 +80,7 @@ const submitForm = async ({ valid }) => {
     </div>
     <span class="cursor-pointer mb-3 block" @click="emits('resetPassword')">Забыли пароль?</span>
     <div class="grid grid-cols-2 gap-3">
-      <Button type="submit" class="w-full" label="Вход" />
+      <Button type="submit" class="w-full" label="Вход" :loading="loading" />
       <Button type="submit" icon="pi pi-github" class="w-full" label="Github" severity="contrast" />
     </div>
   </Form>
