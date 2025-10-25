@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
+import Message from 'primevue/message'
+import { Form } from '@primevue/forms'
 import { z } from 'zod'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
-import { Form } from '@primevue/forms'
-import Message from 'primevue/message'
 import { useToastNotification } from '@/composables/useToastNotifications'
 import { useAuth } from '@/composables/useAuth'
+import { useUserStore } from '@/stores/userStore'
 
+const router = useRouter()
 const { showToast } = useToastNotification()
 const { singIn, signInWithGithub, loading, errorMessage } = useAuth()
+
+const authStore = useUserStore()
 
 type FormData = {
   email: string
@@ -30,13 +35,15 @@ const rules = z.object({
 const resolver = ref(zodResolver(rules))
 const emits = defineEmits(['resetPassword'])
 
-const submitForm = async ({ valid }) => {
+const submitForm = async ({ valid }: { valid: boolean }) => {
   if (!valid) return
   try {
     await singIn({
       email: formData.value.email,
       password: formData.value.password,
     })
+    await authStore.getUserInfo()
+    await router.replace({ name: 'home' })
   } catch {
     showToast('error', 'Ошибка при входе', errorMessage.value)
   }

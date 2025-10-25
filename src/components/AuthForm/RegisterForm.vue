@@ -33,7 +33,7 @@ const rules = z.object({
 
 const resolver = ref(zodResolver(rules))
 
-const submitForm = async ({ valid }) => {
+const submitForm = async ({ valid }: { valid: boolean }) => {
   if (!valid) return
   try {
     await singUp({

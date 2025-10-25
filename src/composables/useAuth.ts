@@ -85,5 +85,24 @@ export function useAuth() {
     })
   }
 
-  return { singUp, singIn, resetPassword, updatePassword, signInWithGithub, loading, errorMessage }
+  const signOut = async () => {
+    return await handleRequest(async () => {
+      const { error } = await supabase.auth.signOut()
+
+      if (error) throw new Error(error.message)
+
+      return error
+    })
+  }
+
+  return {
+    singUp,
+    singIn,
+    resetPassword,
+    updatePassword,
+    signInWithGithub,
+    signOut,
+    loading,
+    errorMessage,
+  }
 }
