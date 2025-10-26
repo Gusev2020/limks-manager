@@ -8,7 +8,6 @@ export const useUserStore = defineStore('auth', () => {
 
   async function getUserInfo() {
     const { data } = await supabase.auth.getUser()
-    console.log(data)
     user.value = data?.user || null
   }
 
