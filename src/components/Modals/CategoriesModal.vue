@@ -76,7 +76,7 @@ watch(modalVaue, async newValue => {
 <template>
   <Toast />
   <div class="card flex justify-center">
-    <Dialog v-model:visible="modalVaue" header="Категории" :style="{ width: '25rem' }">
+    <Dialog modal v-model:visible="modalVaue" header="Категории" :style="{ width: '25rem' }">
       <template v-if="isloadingModal">
         <div class="grid mt-3 grid-cols-[1fr_32px] mb-1 items-center gap-5">
           <Skeleton width="100%" />
