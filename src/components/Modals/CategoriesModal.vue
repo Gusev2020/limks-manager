@@ -94,7 +94,13 @@ watch(modalVaue, async newValue => {
             />
           </div>
           <div class="flex justify-end gap-2 mt-4">
-            <Button type="button" label="Добавить" @click="saveCategory" :loading="isloading" />
+            <Button
+              :disabled="categoryName.length < 3"
+              type="button"
+              label="Добавить"
+              @click="saveCategory"
+              :loading="isloading"
+            />
           </div>
           <div
             :key="category.id"

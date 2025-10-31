@@ -1,17 +1,21 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
-import { z } from 'zod'
-import { zodResolver } from '@primevue/forms/resolvers/zod'
-import { Form } from '@primevue/forms'
 import Message from 'primevue/message'
 import Toast from 'primevue/toast'
+import { Form } from '@primevue/forms'
+import { z } from 'zod'
+import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { useToastNotification } from '@/composables/useToastNotifications'
 import { useAuth } from '@/composables/useAuth'
+import { useUserStore } from '@/stores/userStore'
 
+const router = useRouter()
 const { showToast } = useToastNotification()
 const { singUp, signInWithGithub, loading, errorMessage } = useAuth()
+const authStore = useUserStore()
 
 type FormData = {
   email: string
@@ -41,6 +45,8 @@ const submitForm = async ({ valid }: { valid: boolean }) => {
       password: formData.value.password,
       firstname: formData.value.firstname,
     })
+    await authStore.getUserInfo()
+    await router.replace({ name: 'home' })
   } catch {
     showToast('error', 'Ошибка регистрации', errorMessage.value)
   }
