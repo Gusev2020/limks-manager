@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
@@ -15,6 +15,7 @@ import { supabase } from '@/supabase.ts'
 import { z } from 'zod'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { useUserStore } from '@/stores/userStore'
+import { useLinksStore } from '@/stores/linksStore'
 
 type formInputsType = {
   name: string
@@ -32,6 +33,8 @@ type ListCategoryType = {
 }
 
 const userStore = useUserStore()
+const linksStore = useLinksStore()
+
 const { showToast } = useToastNotification()
 const rules = z.object({
   name: z.string().min(1, { message: 'Название обязательно для заполнения' }),
@@ -39,6 +42,17 @@ const rules = z.object({
 })
 
 const resolver = ref(zodResolver(rules))
+
+const props = defineProps({
+  isEdit: {
+    type: Boolean,
+    default: false,
+  },
+  id: {
+    type: Number,
+    required: false,
+  },
+})
 
 const isLoading = ref<boolean>(false)
 const isLoadingButton = ref<boolean>(false)
@@ -53,6 +67,13 @@ const formInputs = ref<formInputsType>({
   is_favorite: false,
 })
 
+const textButton = computed(() => {
+  return props.isEdit ? 'Изменить' : 'Добавить'
+})
+const textTitle = computed(() => {
+  return props.isEdit ? 'Редактирование ссылки' : 'Создание ссылки'
+})
+
 const getDomain = (url: string) => {
   const { hostname } = new URL(url)
   const parts = hostname.split('.')
@@ -65,6 +86,9 @@ const getDomain = (url: string) => {
 const loadModal = async () => {
   isLoading.value = true
   await getCategories()
+  if (props.isEdit) {
+    await getLink()
+  }
   isLoading.value = false
 }
 
@@ -118,8 +142,50 @@ const addNewLink = async () => {
   }
 }
 
+const updateLink = async () => {
+  isLoadingButton.value = true
+
+  try {
+    const payload = {
+      name: formInputs.value.name,
+      url: formInputs.value.url,
+      description: formInputs.value.description,
+      category: formInputs.value.category?.id,
+      is_favorite: formInputs.value.is_favorite,
+    }
+    const { error } = await supabase.from('links').update(payload).eq('id', props.id)
+    if (error) throw error
+    showToast('success', 'Успех', 'Ссылка успешно обновлена')
+  } catch {
+    showToast('error', 'Ошибка', 'Не удалось обновить ссылку')
+  } finally {
+    isLoadingButton.value = false
+  }
+}
+
 const submitForm = async () => {
-  await addNewLink()
+  if (props.isEdit) {
+    await updateLink()
+  } else {
+    await addNewLink()
+  }
+  await linksStore.fetchLinks(true, true)
+}
+
+const getLink = async () => {
+  try {
+    const { data, error } = await supabase.from('links').select().eq('id', props.id)
+    if (error) throw error
+
+    formInputs.value.name = data[0].name
+    formInputs.value.url = data[0].url
+    formInputs.value.description = data[0].description
+    formInputs.value.category =
+      listCategories.value.find(item => item.id === data[0].category) || null
+    formInputs.value.is_favorite = data[0].is_favorite
+  } catch {
+    showToast('error', 'Ошибка', 'Ошибка при получении ссылки')
+  }
 }
 
 watch(modalValue, async newValue => {
@@ -131,7 +197,7 @@ watch(modalValue, async newValue => {
 
 <template>
   <Toast />
-  <Dialog modal v-model:visible="modalValue" header="Создание ссылки" :style="{ width: '25rem' }">
+  <Dialog modal v-model:visible="modalValue" :header="textTitle" :style="{ width: '25rem' }">
     <Form
       v-slot="$form"
       :initial-values="formInputs"
@@ -188,7 +254,7 @@ watch(modalValue, async newValue => {
           <label for="isFavorite">Добавить в избранное</label>
         </div>
         <div class="flex justify-end gap-2 mt-4">
-          <Button label="Добавить" type="submit" :loading="isLoadingButton" />
+          <Button :label="textButton" type="submit" :loading="isLoadingButton" />
         </div>
       </template>
     </Form>

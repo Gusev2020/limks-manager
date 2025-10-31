@@ -22,6 +22,13 @@ app.use(PrimeVue, {
       darkModeSelector: false,
     },
   },
+  pt: {
+    toast: {
+      root: {
+        style: 'max-width:calc(100vw - 40px)',
+      },
+    },
+  },
 })
 app.use(ToastService)
 app.mount('#app')
